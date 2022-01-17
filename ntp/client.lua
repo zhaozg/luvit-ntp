@@ -132,9 +132,10 @@ local function get_timezone()
     return os.difftime(now, os.time(os.date("!*t", now)))
 end
 
-function NTPClient:initialize(ntpserver, callback)
+function NTPClient:initialize(ntpserver, callback, timeout)
     self.ntpserver = assert(ntpserver) --"194.109.22.18"
     assert(type(callback)=='function')
+    self.timeout = timeout or 1000
 
     self.port = 123
     self.tz=get_timezone()
@@ -157,9 +158,10 @@ function NTPClient:initialize(ntpserver, callback)
         self.socket:on("message",function(msg, rinfo)
             local sec, msec = self:calc_stamp(msg:sub(41,44), msg:sub(45,48))
             self:emit('update', sec, msec, rinfo)
+            self.socket:setTimeout(0)
         end)
         self.socket:on('error',function(...)
-            self.emit('error',...)
+            self:emit('error',...)
         end)
         callback(self)
     end)
@@ -185,7 +187,15 @@ end
 
 function NTPClient:query()
     if self.server then
-        self.socket:send(self.request,self.port,self.server)
+        local ret, err = self.socket:send(self.request,self.port,self.server)
+        if not ret then
+          timer.setImmediate(function()
+            self:emit('error', err)
+          end)
+        end
+        self.socket:setTimeout(self.timeout, function()
+          self:emit('error', 'timeout')
+        end)
     else
         self:emit('error','please wait initializing', 'ntp')
     end
