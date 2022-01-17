@@ -1,6 +1,6 @@
 --[[lit-meta
   name = "zhaozg/ntp"
-  version = "0.0.3"
+  version = "0.1.0"
   homepage = "https://github.com/zhaozg/luvit-ntp"
   description = "ntp module for luvit."
   tags = {"ntp","client"}
