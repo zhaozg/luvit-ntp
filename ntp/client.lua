@@ -143,7 +143,7 @@ function NTPClient:initialize(ntpserver, callback, timeout)
 
     dns.resolve4(self.ntpserver, function(err, answers)
         if err then
-            self:emit('error','dns ERROR')
+            self:emit('error','failed to resolve domain name')
             return
         end
         for _,v in pairs(answers) do
